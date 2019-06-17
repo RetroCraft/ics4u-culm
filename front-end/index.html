@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css" />
+    <title>simple.js</title>
+    <style>
+      textarea {
+        font-family: "Fira Code", "Courier New", Courier, monospace;
+      }
+    </style>
+    <script type="module">
+      import { Parser } from "../build/Parser.js";
+      window.parser = new Parser();
+
+      // inefficient, but the proper method takes way more lines
+      const $ = (...args) => document.querySelector(...args);
+      function prefix(number) {
+        if (number < 1000) return `${number}`;
+        if (number < 1e6) return `${(number / 1000).toFixed(2)}K`;
+        return `${(number / 1e6).toFixed(2)}M`;
+      }
+
+      $("#code").oninput = e => {
+        const out = parser.simplify(e.target.value, true);
+        $("#out").value = out;
+        $("#code-length").innerHTML = prefix(e.target.value.length);
+        $("#out-length").innerHTML = prefix(out.length);
+        // count unique chars by putting into a set
+        const uniqChars = new Set(e.target.value).size;
+        $("#code-chars").innerHTML = uniqChars;
+        $("#code-chars-percent").innerHTML = `${(600 / uniqChars).toFixed(2)}%`;
+      };
+
+      $("#run").onclick = e => {
+        const oldLog = console.log;
+        window.console.log = (...args) => {
+          // show log if something happens
+          $("#console").style.display = "block";
+          $("#console textarea").value += args[0] + "\n";
+          oldLog.apply(console, args);
+        };
+        // clear log before running
+        $("#console textarea").value = "";
+        try {
+          eval($("#out").value);
+        } catch (e) {
+          console.log(e);
+        }
+        window.console.log = oldLog;
+      };
+    </script>
+  </head>
+
+  <body>
+    <section class="hero is-primary">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">simple.js</h1>
+          <h2 class="subtitle">
+            ...because I was so preoccupied with whether or not I could, I didn't stop to think whether or not I should
+          </h2>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <p>
+          JavaScript has always been a confusing language for a lot of people.
+          <br />
+          To rectify this, we have created <strong>simple.js</strong>. It's JavaScript with all the functionality, but
+          none of the complexity. Like the Simple English Wikipedia, it uses only the most common characters in
+          JavaScript. With just <kbd>!</kbd>, <kbd>+</kbd>, <kbd>(</kbd>, <kbd>)</kbd>, <kbd>[</kbd>, and <kbd>]</kbd>,
+          you can write any JavaScript code. Who needs variables after all?
+        </p>
+        <div class="columns">
+          <div class="field column">
+            <label for="code" class="label">JavaScript Code (<span id="code-length">0</span>)</label>
+            <div class="control">
+              <textarea
+                id="code"
+                name="code"
+                class="textarea"
+                placeholder="alert('Hello, world!')"
+                autocomplete="off"
+              ></textarea>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label for="out" class="label">simple.js Code (<span id="out-length">0</span>)</label>
+              <div class="control">
+                <textarea
+                  id="out"
+                  class="textarea is-small"
+                  placeholder="Output"
+                  autocomplete="off"
+                  readonly
+                ></textarea>
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <button class="button is-link" id="run">Run!</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p>
+          Your original code had <strong id="code-chars">0</strong> types of characters. We've optimized that to just
+          six! That's a <strong id="code-chars-percent">0%</strong> reduction.
+        </p>
+        <div class="field" id="console" style="display:none">
+          <label for="out" class="label">Output console</label>
+          <div class="control">
+            <textarea class="textarea is-small" placeholder="Output" autocomplete="off" readonly></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
